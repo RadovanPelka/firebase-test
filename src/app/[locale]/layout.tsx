@@ -4,6 +4,10 @@ import { routing } from "@/i18n/routing";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "../globals.css";
+import { authConfig } from "@/config/server-config";
+import { cookies, headers } from "next/headers";
+import { getTokens } from "next-firebase-auth-edge";
+import { toUser } from "../shared/user";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -27,6 +31,12 @@ export default async function LocaleLayout({
   children: React.ReactNode;
   params: Promise<{ locale: string }>;
 }) {
+  const tokens = await getTokens(await cookies(), {
+    ...authConfig,
+    headers: await headers(),
+  });
+  const user = tokens ? toUser(tokens) : null;
+
   // Ensure that the incoming `locale` is valid
   const { locale } = await params;
   if (!hasLocale(routing.locales, locale)) {
@@ -38,6 +48,7 @@ export default async function LocaleLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        {JSON.stringify(user)}
         <NextIntlClientProvider>{children}</NextIntlClientProvider>
       </body>
     </html>
